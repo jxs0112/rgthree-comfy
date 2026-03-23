@@ -232,6 +232,7 @@ export abstract class BaseFastGroupsModeChanger extends RgthreeBaseVirtualNode {
         isDirty = true;
       }
       if (isDirty) {
+        widget.triggerDraw?.();
         this.setDirtyCanvas(true, false);
       }
       index++;
@@ -392,7 +393,7 @@ class FastGroupsToggleRowWidget extends RgthreeBaseWidget<{toggled: boolean}> {
   override options = {on: "yes", off: "no"};
   override readonly type = "custom";
 
-  label: string = "";
+  private _label: string = "";
   group: LGraphGroup;
   node: BaseFastGroupsModeChanger;
 
@@ -429,6 +430,7 @@ class FastGroupsToggleRowWidget extends RgthreeBaseWidget<{toggled: boolean}> {
     changeModeOfNodes(getGroupNodes(this.group), (newValue ? this.node.modeOn : this.node.modeOff));
     this.group.rgthree_hasAnyActiveNode = newValue;
     this.toggled = newValue;
+    this.triggerDraw?.();
     this.group.graph?.setDirtyCanvas(true, false);
   }
 
@@ -437,6 +439,15 @@ class FastGroupsToggleRowWidget extends RgthreeBaseWidget<{toggled: boolean}> {
   }
   set toggled(value: boolean) {
     this.value.toggled = value;
+    this.triggerDraw?.();
+  }
+
+  get label() {
+    return this._label;
+  }
+  set label(value: string) {
+    this._label = value;
+    this.triggerDraw?.();
   }
 
   toggle(value?: boolean) {

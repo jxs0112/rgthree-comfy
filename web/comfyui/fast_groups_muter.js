@@ -162,6 +162,7 @@ export class BaseFastGroupsModeChanger extends RgthreeBaseVirtualNode {
                 isDirty = true;
             }
             if (isDirty) {
+                widget.triggerDraw === null || widget.triggerDraw === void 0 ? void 0 : widget.triggerDraw();
                 this.setDirtyCanvas(true, false);
             }
             index++;
@@ -319,7 +320,7 @@ class FastGroupsToggleRowWidget extends RgthreeBaseWidget {
         this.value = { toggled: false };
         this.options = { on: "yes", off: "no" };
         this.type = "custom";
-        this.label = "";
+        this._label = "";
         this.group = group;
         this.node = node;
     }
@@ -350,6 +351,7 @@ class FastGroupsToggleRowWidget extends RgthreeBaseWidget {
         changeModeOfNodes(getGroupNodes(this.group), (newValue ? this.node.modeOn : this.node.modeOff));
         this.group.rgthree_hasAnyActiveNode = newValue;
         this.toggled = newValue;
+        this.triggerDraw === null || this.triggerDraw === void 0 ? void 0 : this.triggerDraw();
         (_d = this.group.graph) === null || _d === void 0 ? void 0 : _d.setDirtyCanvas(true, false);
     }
     get toggled() {
@@ -357,6 +359,14 @@ class FastGroupsToggleRowWidget extends RgthreeBaseWidget {
     }
     set toggled(value) {
         this.value.toggled = value;
+        this.triggerDraw === null || this.triggerDraw === void 0 ? void 0 : this.triggerDraw();
+    }
+    get label() {
+        return this._label;
+    }
+    set label(value) {
+        this._label = value;
+        this.triggerDraw === null || this.triggerDraw === void 0 ? void 0 : this.triggerDraw();
     }
     toggle(value) {
         value = value == null ? !this.toggled : value;
