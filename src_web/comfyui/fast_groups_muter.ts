@@ -163,6 +163,8 @@ export abstract class BaseFastGroupsModeChanger extends RgthreeBaseVirtualNode {
       });
     }
 
+    const widgetNameCounts = new Map<string, number>();
+
     // Go over the groups
     let index = 0;
     for (const group of groups) {
@@ -195,7 +197,10 @@ export abstract class BaseFastGroupsModeChanger extends RgthreeBaseVirtualNode {
       }
       let isDirty = false;
       const widgetLabel = `Enable ${group.title}`;
-      let widget = this.widgets.find((w) => w.label === widgetLabel) as FastGroupsToggleRowWidget;
+      const widgetCount = (widgetNameCounts.get(widgetLabel) ?? 0) + 1;
+      widgetNameCounts.set(widgetLabel, widgetCount);
+      const widgetName = widgetCount === 1 ? widgetLabel : `${widgetLabel} (${widgetCount})`;
+      let widget = this.widgets.find((w) => w.name === widgetName) as FastGroupsToggleRowWidget;
       if (!widget) {
         // When we add a widget, litegraph is going to mess up the size, so we
         // store it so we can retrieve it in computeSize. Hacky..
@@ -204,6 +209,10 @@ export abstract class BaseFastGroupsModeChanger extends RgthreeBaseVirtualNode {
           new FastGroupsToggleRowWidget(group, this),
         ) as FastGroupsToggleRowWidget;
         this.setSize(this.computeSize());
+        isDirty = true;
+      }
+      if (widget.name != widgetName) {
+        widget.name = widgetName;
         isDirty = true;
       }
       if (widget.label != widgetLabel) {
@@ -391,6 +400,14 @@ class FastGroupsToggleRowWidget extends RgthreeBaseWidget<{toggled: boolean}> {
     super("RGTHREE_TOGGLE_AND_NAV");
     this.group = group;
     this.node = node;
+  }
+
+  computeLayoutSize(_node: LGraphNode) {
+    return {
+      minHeight: LiteGraph.NODE_WIDGET_HEIGHT,
+      maxHeight: LiteGraph.NODE_WIDGET_HEIGHT,
+      minWidth: 0,
+    };
   }
 
   doModeChange(force?: boolean, skipOtherNodeCheck?: boolean) {

@@ -100,6 +100,7 @@ export class BaseFastGroupsModeChanger extends RgthreeBaseVirtualNode {
                 return `#${color}`;
             });
         }
+        const widgetNameCounts = new Map();
         let index = 0;
         for (const group of groups) {
             if (filterColors.length) {
@@ -132,11 +133,18 @@ export class BaseFastGroupsModeChanger extends RgthreeBaseVirtualNode {
             }
             let isDirty = false;
             const widgetLabel = `Enable ${group.title}`;
-            let widget = this.widgets.find((w) => w.label === widgetLabel);
+            const widgetCount = (widgetNameCounts.get(widgetLabel) ?? 0) + 1;
+            widgetNameCounts.set(widgetLabel, widgetCount);
+            const widgetName = widgetCount === 1 ? widgetLabel : `${widgetLabel} (${widgetCount})`;
+            let widget = this.widgets.find((w) => w.name === widgetName);
             if (!widget) {
                 this.tempSize = [...this.size];
                 widget = this.addCustomWidget(new FastGroupsToggleRowWidget(group, this));
                 this.setSize(this.computeSize());
+                isDirty = true;
+            }
+            if (widget.name != widgetName) {
+                widget.name = widgetName;
                 isDirty = true;
             }
             if (widget.label != widgetLabel) {
@@ -314,6 +322,13 @@ class FastGroupsToggleRowWidget extends RgthreeBaseWidget {
         this.label = "";
         this.group = group;
         this.node = node;
+    }
+    computeLayoutSize(_node) {
+        return {
+            minHeight: LiteGraph.NODE_WIDGET_HEIGHT,
+            maxHeight: LiteGraph.NODE_WIDGET_HEIGHT,
+            minWidth: 0,
+        };
     }
     doModeChange(force, skipOtherNodeCheck) {
         var _a, _b, _c, _d;
