@@ -5,6 +5,13 @@ import { NodeTypesString } from "./constants.js";
 import { addConnectionLayoutSupport } from "./utils.js";
 import { RgthreeBaseWidget } from "./utils_widgets.js";
 import { measureText } from "./utils_canvas.js";
+function hasNativeCompareView(nodeData) {
+    var _a, _b;
+    const compareViewInput = ((_a = nodeData.input) === null || _a === void 0 ? void 0 : _a.required) === undefined
+        ? ((_b = nodeData.input) === null || _b === void 0 ? void 0 : _b.optional) === null || (_b === void 0 ? void 0 : _b.compare_view)
+        : nodeData.input.required.compare_view || (nodeData.input.optional && nodeData.input.optional.compare_view);
+    return Array.isArray(compareViewInput) && compareViewInput[0] === "IMAGECOMPARE";
+}
 function imageDataToUrl(data) {
     return api.apiURL(`/view?filename=${encodeURIComponent(data.filename)}&type=${data.type}&subfolder=${data.subfolder}${app.getPreviewFormatParam()}${app.getRandParam()}`);
 }
@@ -165,6 +172,13 @@ export class RgthreeImageComparer extends RgthreeBaseServerNode {
       </ul>`;
     }
     static setUp(comfyClass, nodeData) {
+        if (hasNativeCompareView(nodeData)) {
+            addConnectionLayoutSupport(comfyClass, app, [
+                ["Left", "Right"],
+                ["Right", "Left"],
+            ]);
+            return;
+        }
         RgthreeBaseServerNode.registerForOverride(comfyClass, nodeData, RgthreeImageComparer);
     }
     static onRegisteredForOverride(comfyClass) {
