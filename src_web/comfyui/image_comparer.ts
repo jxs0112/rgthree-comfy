@@ -28,6 +28,13 @@ type ExecutedPayload = {
   b_images?: ComfyImageServerData[];
 };
 
+function hasNativeCompareView(nodeData: ComfyNodeDef) {
+  const compareViewInput =
+    (nodeData.input?.required as Record<string, unknown> | undefined)?.compare_view ||
+    (nodeData.input?.optional as Record<string, unknown> | undefined)?.compare_view;
+  return Array.isArray(compareViewInput) && compareViewInput[0] === "IMAGECOMPARE";
+}
+
 function imageDataToUrl(data: ComfyImageServerData) {
   return api.apiURL(
     `/view?filename=${encodeURIComponent(data.filename)}&type=${data.type}&subfolder=${
@@ -224,6 +231,13 @@ export class RgthreeImageComparer extends RgthreeBaseServerNode {
   }
 
   static override setUp(comfyClass: typeof LGraphNode, nodeData: ComfyNodeDef) {
+    if (hasNativeCompareView(nodeData)) {
+      addConnectionLayoutSupport(comfyClass as LGraphNodeConstructor, app, [
+        ["Left", "Right"],
+        ["Right", "Left"],
+      ]);
+      return;
+    }
     RgthreeBaseServerNode.registerForOverride(comfyClass, nodeData, RgthreeImageComparer);
   }
 
