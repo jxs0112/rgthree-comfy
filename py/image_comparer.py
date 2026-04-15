@@ -1,72 +1,42 @@
-import nodes
-
-from comfy_api.latest import IO
+from nodes import PreviewImage
 
 from .constants import get_category, get_name
 
 
-class RgthreeImageComparer(IO.ComfyNode):
+class RgthreeImageComparer(PreviewImage):
   """A node that compares two images in the UI."""
 
   NAME = get_name('Image Comparer')
   CATEGORY = get_category()
-  DESCRIPTION = "Compares two images with a slider interface."
+  FUNCTION = "compare_images"
+  DESCRIPTION = "Compares two images with a hover slider, or click from properties."
 
   @classmethod
-  def define_schema(cls):
-    return IO.Schema(
-      node_id=cls.NAME,
-      display_name=cls.NAME,
-      description=cls.DESCRIPTION,
-      category=cls.CATEGORY,
-      is_output_node=True,
-      inputs=[
-        IO.Image.Input("image_a", optional=True),
-        IO.Image.Input("image_b", optional=True),
-        # Let the frontend render the native compare control in Node 2.0.
-        IO.ImageCompare.Input("compare_view"),
-      ],
-      hidden=[IO.Hidden.prompt, IO.Hidden.extra_pnginfo],
-      outputs=[],
-    )
+  def INPUT_TYPES(cls):  # pylint: disable = invalid-name, missing-function-docstring
+    return {
+      "required": {},
+      "optional": {
+        "image_a": ("IMAGE",),
+        "image_b": ("IMAGE",),
+      },
+      "hidden": {
+        "prompt": "PROMPT",
+        "extra_pnginfo": "EXTRA_PNGINFO"
+      },
+    }
 
-  @classmethod
-  def compare_images(cls,
+  def compare_images(self,
                      image_a=None,
                      image_b=None,
-                     compare_view=None,
+                     filename_prefix="rgthree.compare.",
                      prompt=None,
                      extra_pnginfo=None):
-    return cls.execute(
-      image_a=image_a,
-      image_b=image_b,
-      compare_view=compare_view,
-      prompt=prompt,
-      extra_pnginfo=extra_pnginfo,
-    )
 
-  @classmethod
-  def execute(cls,
-              image_a=None,
-              image_b=None,
-              compare_view=None,
-              prompt=None,
-              extra_pnginfo=None) -> IO.NodeOutput:
-    del compare_view
-
-    result = {"a_images": [], "b_images": []}
-    preview_node = nodes.PreviewImage()
-
+    result = { "ui": { "a_images":[], "b_images": [] } }
     if image_a is not None and len(image_a) > 0:
-      saved = preview_node.save_images(
-        image_a, "rgthree.compare.a", prompt, extra_pnginfo
-      )
-      result["a_images"] = saved["ui"]["images"]
+      result['ui']['a_images'] = self.save_images(image_a, filename_prefix, prompt, extra_pnginfo)['ui']['images']
 
     if image_b is not None and len(image_b) > 0:
-      saved = preview_node.save_images(
-        image_b, "rgthree.compare.b", prompt, extra_pnginfo
-      )
-      result["b_images"] = saved["ui"]["images"]
+      result['ui']['b_images'] = self.save_images(image_b, filename_prefix, prompt, extra_pnginfo)['ui']['images']
 
-    return IO.NodeOutput(ui=result)
+    return result
